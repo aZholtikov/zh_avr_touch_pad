@@ -1,6 +1,4 @@
-# RF touch pad
-
-Touch pad on ATMega 8/48/168/328 + nRF24L01.
+# Touch pad on ATMega 8/48/168/328 + nRF24L01
 
 ## Features
 
