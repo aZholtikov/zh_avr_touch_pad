@@ -225,10 +225,7 @@ static void zh_nrf24_init(void)
 	_delay_ms(100);
 	DDRB |= (1 << PB1);
 	PORTB &= ~(1 << PB1);
-	uint8_t gateway_address[3] = {
-		(uint8_t)((GATEWAY_ADDRESS >> 16) & 0xFF),
-		(uint8_t)((GATEWAY_ADDRESS >> 8) & 0xFF),
-		(uint8_t)(GATEWAY_ADDRESS & 0xFF)};
+	uint64_t gateway_address = GATEWAY_ADDRESS;
 	zh_nrf24_write_register(NRF_REG_CONFIG, 0x00);
 	zh_nrf24_write_register(NRF_REG_EN_AA, 0x01);
 	zh_nrf24_write_register(NRF_REG_EN_RXADDR, 0x01);
@@ -236,8 +233,8 @@ static void zh_nrf24_init(void)
 	zh_nrf24_write_register(NRF_REG_SETUP_RETR, 0xFF);
 	zh_nrf24_write_register(NRF_REG_RF_CH, GATEWAY_CHANNEL);
 	zh_nrf24_write_register(NRF_REG_RF_SETUP, 0x26);
-	zh_nrf24_write_buff_register(NRF_REG_TX_ADDR, gateway_address, 3);
-	zh_nrf24_write_buff_register(NRF_REG_RX_ADDR_P0, gateway_address, 3);
+	zh_nrf24_write_buff_register(NRF_REG_TX_ADDR, (uint8_t *)&gateway_address, 3);
+	zh_nrf24_write_buff_register(NRF_REG_RX_ADDR_P0, (uint8_t *)&gateway_address, 3);
 	zh_nrf24_write_register(NRF_REG_STATUS, NRF_STATUS_RX_DR | NRF_STATUS_TX_DS | NRF_STATUS_MAX_RT);
 	zh_nrf24_write_register(NRF_REG_CONFIG, NRF_CONFIG_MASK_RX_DR | NRF_CONFIG_EN_CRC);
 }
