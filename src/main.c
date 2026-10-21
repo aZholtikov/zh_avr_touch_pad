@@ -3,6 +3,7 @@
 #include "avr/fuse.h"
 #include "avr/interrupt.h"
 #include "util/delay.h"
+#include "zh_rf_config.h"
 
 #if defined(__AVR_ATmega328PB__)
 #ifndef SPCR
@@ -31,7 +32,6 @@
 #define GATEWAY_CHANNEL 120
 #define GATEWAY_ADDRESS 0xDDEEFF
 #define DEVICE_ID 6
-#define DEVICE_TYPE 4
 
 #define NRF_CMD_W_REGISTER 0x20
 #define NRF_CMD_W_TX_PAYLOAD 0xA0
@@ -164,6 +164,8 @@ static float zh_get_battery_voltage(void);
 
 static volatile uint8_t send_request = 0;
 
+zh_rf_sensor_transmitted_data_t transmitted_data = {DEVICE_ID, ZH_RF_SENSOR_TOUCH_SWITCH, 0, 0, 0, 0, 0};
+
 int main(void)
 {
 	cli();
@@ -179,8 +181,8 @@ int main(void)
 			cli();
 			send_request = 0;
 			sei();
-			int16_t data[] = {DEVICE_ID, DEVICE_TYPE, (int16_t)(zh_get_battery_voltage() * 100.0), 0, 0, 0, 0};
-			zh_nrf24_send((uint8_t *)data, sizeof(data));
+			transmitted_data.battery_voltage = (int16_t)(zh_get_battery_voltage() * 100.0);
+			zh_nrf24_send((uint8_t *)&transmitted_data, sizeof(transmitted_data));
 		}
 		else
 		{
