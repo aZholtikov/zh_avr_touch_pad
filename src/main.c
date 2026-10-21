@@ -60,7 +60,7 @@
 /**
  * @brief Initialize INT1 external interrupt for the touch-pad wake-up signal.
  *
- * Configures PD3 as a falling-edge triggered external interrupt source and
+ * Configures PD3 as a rising-edge triggered external interrupt source and
  * enables the INT1 interrupt mask bit. The ISR sets the send_request flag
  * to trigger a radio transmission from the main loop.
  */
@@ -171,19 +171,28 @@ int main(void)
 	zh_spi_init();
 	zh_nrf24_init();
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-	sleep_enable();
 	sei();
 	for (;;)
 	{
 		if (send_request == 1)
 		{
+			cli();
 			send_request = 0;
+			sei();
 			int16_t data[] = {DEVICE_ID, DEVICE_TYPE, (int16_t)(zh_get_battery_voltage() * 100.0), 0, 0, 0, 0};
 			zh_nrf24_send((uint8_t *)data, sizeof(data));
 		}
 		else
 		{
-			sleep_cpu();
+			cli();
+			if (send_request == 0)
+			{
+				sleep_enable();
+				sei();
+				sleep_cpu();
+			}
+			sei();
+			sleep_disable();
 		}
 	}
 	return 0;
@@ -225,6 +234,8 @@ static void zh_nrf24_init(void)
 	_delay_ms(100);
 	DDRB |= (1 << PB1);
 	PORTB &= ~(1 << PB1);
+	DDRD &= ~(1 << PD2);
+	PORTD |= (1 << PD2);
 	uint64_t gateway_address = GATEWAY_ADDRESS;
 	zh_nrf24_write_register(NRF_REG_CONFIG, 0x00);
 	zh_nrf24_write_register(NRF_REG_EN_AA, 0x01);
@@ -249,7 +260,7 @@ static void zh_nrf24_send(uint8_t *buf, uint8_t size)
 	uint8_t count = 0;
 	while ((PIND & (1 << PD2)) != 0)
 	{
-		if (++count > 50)
+		if (++count > 100)
 		{
 			break;
 		}
