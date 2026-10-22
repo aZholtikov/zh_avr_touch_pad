@@ -3,6 +3,7 @@
 #include "avr/fuse.h"
 #include "avr/interrupt.h"
 #include "util/delay.h"
+#include "math.h"
 #include "zh_rf_config.h"
 
 #if defined(__AVR_ATmega328PB__)
@@ -181,7 +182,7 @@ int main(void)
 			cli();
 			send_request = 0;
 			sei();
-			transmitted_data.battery_voltage = (int16_t)(zh_get_battery_voltage() * 100.0);
+			transmitted_data.battery_voltage = (int16_t)lroundf(zh_get_battery_voltage() * 100.0);
 			zh_nrf24_send((uint8_t *)&transmitted_data, sizeof(transmitted_data));
 		}
 		else
