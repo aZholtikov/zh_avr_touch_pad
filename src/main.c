@@ -294,7 +294,6 @@ static float zh_get_battery_voltage(void);
 
 static volatile uint8_t send_request = false;
 static volatile uint8_t nrf_event = false;
-static volatile uint8_t wdt_event = false;
 
 zh_rf_sensor_transmitted_data_t transmitted_data = {0};
 
@@ -365,7 +364,6 @@ ISR(INT0_vect)
 
 ISR(WDT_vect)
 {
-	wdt_event = true;
 }
 
 static uint8_t zh_load_device_id(void)
@@ -611,7 +609,6 @@ static uint8_t zh_do_pairing(void)
 		{
 		case ZH_RF_PAIR_SEND:
 			nrf_event = false;
-			wdt_event = false;
 			zh_nrf24_send_no_wait((uint8_t *)&pairing_request, ZH_RF_PAIRING_PACKET_SIZE);
 			state = ZH_RF_PAIR_TX_WAIT;
 			break;
@@ -623,7 +620,6 @@ static uint8_t zh_do_pairing(void)
 			else
 			{
 				nrf_event = false;
-				wdt_event = false;
 				zh_wdt_start(WDT_T_250MS);
 				sleep_enable();
 				sei();
@@ -660,7 +656,6 @@ static uint8_t zh_do_pairing(void)
 			else
 			{
 				nrf_event = false;
-				wdt_event = false;
 				zh_wdt_start(WDT_T_250MS);
 				sleep_enable();
 				sei();
@@ -716,7 +711,6 @@ static uint8_t zh_do_pairing(void)
 		case ZH_RF_PAIR_BACKOFF:
 			zh_nrf24_enter_power_down();
 			nrf_event = false;
-			wdt_event = false;
 			zh_wdt_start(WDT_T_4S);
 			sleep_enable();
 			sei();
@@ -724,7 +718,6 @@ static uint8_t zh_do_pairing(void)
 			sleep_disable();
 			zh_wdt_stop();
 			sei();
-			wdt_event = false;
 			if (++attempts >= PAIRING_TIMEOUT_ATTEMPTS)
 			{
 				zh_enter_final_sleep();
