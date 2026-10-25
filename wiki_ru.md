@@ -25,12 +25,12 @@
 
 Прошивка не использует динамическое выделение памяти. Все данные хранятся в статической области и регистрах микроконтроллера.
 
-Пакет формируется в глобальной переменной `transmitted_data` типа `zh_rf_sensor_transmitted_data_t` из внешней библиотеки `zh_rf_config` и сериализуется функцией `zh_rf_sensor_build_payload()` перед передачей.
+Пакет формируется в глобальной переменной `transmitted_data` типа `zh_nrf24_sensor_transmitted_data_t` из внешней библиотеки `zh_nrf24_config` и сериализуется функцией `zh_nrf24_sensor_build_payload()` перед передачей.
 
 | Поле | Тип | Описание |
 | ------ | ----- | ---------- |
 | `id` | `int16_t` | Идентификатор устройства, присвоенный шлюзом при сопряжении |
-| `type` | `int16_t` | Тип устройства (`ZH_RF_SENSOR_TOUCH_SWITCH`) |
+| `type` | `int16_t` | Тип устройства (`ZH_NRF24_SENSOR_TOUCH_SWITCH`) |
 | `battery` | `int16_t` | Напряжение батареи × 100 (например, 330 = 3.30 В) |
 
 ### Конфигурационные макросы
@@ -144,10 +144,10 @@
 
 Конечный автомат `zh_do_pairing()` работает в четырёх состояниях:
 
-1. **`ZH_RF_PAIR_SEND`** — генерируется псевдослучайный токен, формируется пакет запроса (`zh_rf_sensor_pairing_data_t` с `magic = ZH_RF_PAIRING_REQ_MAGIC`), выполняется неблокирующая передача через `zh_nrf24_send_no_wait()`.
-2. **`ZH_RF_PAIR_TX_WAIT`** — ожидание прерывания IRQ (завершение передачи). Если пин IRQ уже низкий — событие считается наступившим. Иначе — переход в сон с watchdog-таймером 250 мс. При флаге `TX_DS` — переход в приём, при `MAX_RT` — в backoff.
-3. **`ZH_RF_PAIR_RX_WAIT`** — ожидание ответа шлюза. При получении пакета проверяется: длина равна `ZH_RF_PAIRING_PACKET_SIZE`, `magic == ZH_RF_PAIRING_ACK_MAGIC`, тип совпадает, токен совпадает, `id != 0` и `id != DEVICE_ID_UNASSIGNED`. При успехе — сохранение `id` в EEPROM и возврат.
-4. **`ZH_RF_PAIR_BACKOFF`** — переход в Power Down, ожидание 4 с через watchdog. После `PAIRING_TIMEOUT_ATTEMPTS` (7) неудачных попыток — переход в `zh_enter_final_sleep()`.
+1. **`ZH_NRF24_PAIR_SEND`** — генерируется псевдослучайный токен, формируется пакет запроса (`zh_nrf24_sensor_pairing_data_t` с `magic = ZH_NRF24_PAIRING_REQ_MAGIC`), выполняется неблокирующая передача через `zh_nrf24_send_no_wait()`.
+2. **`ZH_NRF24_PAIR_TX_WAIT`** — ожидание прерывания IRQ (завершение передачи). Если пин IRQ уже низкий — событие считается наступившим. Иначе — переход в сон с watchdog-таймером 250 мс. При флаге `TX_DS` — переход в приём, при `MAX_RT` — в backoff.
+3. **`ZH_NRF24_PAIR_RX_WAIT`** — ожидание ответа шлюза. При получении пакета проверяется: длина равна `ZH_NRF24_PAIRING_PACKET_SIZE`, `magic == ZH_NRF24_PAIRING_ACK_MAGIC`, тип совпадает, токен совпадает, `id != 0` и `id != DEVICE_ID_UNASSIGNED`. При успехе — сохранение `id` в EEPROM и возврат.
+4. **`ZH_NRF24_PAIR_BACKOFF`** — переход в Power Down, ожидание 4 с через watchdog. После `PAIRING_TIMEOUT_ATTEMPTS` (7) неудачных попыток — переход в `zh_enter_final_sleep()`.
 
 ### Алгоритм измерения напряжения батареи
 
@@ -195,10 +195,10 @@
 #include "avr/wdt.h"
 #include "math.h"
 #include "stdbool.h"
-#include "zh_rf_config.h"
+#include "zh_nrf24_config.h"
 
 static volatile uint8_t send_request = false;
-zh_rf_sensor_transmitted_data_t transmitted_data = {0};
+zh_nrf24_sensor_transmitted_data_t transmitted_data = {0};
 
 ISR(INT1_vect)
 {
@@ -207,7 +207,7 @@ ISR(INT1_vect)
 
 int main(void)
 {
-    transmitted_data.type = ZH_RF_SENSOR_TOUCH_SWITCH;
+    transmitted_data.type = ZH_NRF24_SENSOR_TOUCH_SWITCH;
     MCUSR &= ~(1 << WDRF);
     wdt_disable();
     cli();
@@ -231,8 +231,8 @@ int main(void)
             send_request = false;
             sei();
             transmitted_data.battery = (int16_t)lroundf(zh_get_battery_voltage() * 100.0);
-            uint8_t payload[ZH_RF_MAX_PAYLOAD_SIZE];
-            uint8_t size = zh_rf_sensor_build_payload(&transmitted_data, payload, sizeof(payload));
+            uint8_t payload[ZH_NRF24_MAX_PAYLOAD_SIZE];
+            uint8_t size = zh_nrf24_sensor_build_payload(&transmitted_data, payload, sizeof(payload));
             if (size > 0)
             {
                 zh_nrf24_send(payload, size);
@@ -273,7 +273,7 @@ int main(void)
 // Измените адрес и канал под ваш шлюз
 #define GATEWAY_CHANNEL 120
 #define GATEWAY_ADDRESS 0xDDEEFF
-// Тип устройства задаётся перечислением ZH_RF_SENSOR_TOUCH_SWITCH из zh_rf_config
+// Тип устройства задаётся перечислением ZH_NRF24_SENSOR_TOUCH_SWITCH из zh_nrf24_config
 ```
 
 ---
@@ -286,9 +286,9 @@ int main(void)
 | --------- | ----------- |
 | Нулевое показание АЦП | `zh_get_battery_voltage()` возвращает `0.0` |
 | Превышение таймаута передачи (100 мс) | Передача прерывается, пакет теряется |
-| Неверная длина принятого пакета при сопряжении | Пакет отбрасывается, переход в `ZH_RF_PAIR_BACKOFF` |
+| Неверная длина принятого пакета при сопряжении | Пакет отбрасывается, переход в `ZH_NRF24_PAIR_BACKOFF` |
 | Превышение числа попыток сопряжения (7) | `zh_enter_final_sleep()` — сон до сброса |
-| `zh_rf_sensor_build_payload()` возвращает 0 | Передача пропускается, переход в `zh_enter_final_sleep()` |
+| `zh_nrf24_sensor_build_payload()` возвращает 0 | Передача пропускается, переход в `zh_enter_final_sleep()` |
 
 ---
 
@@ -308,7 +308,7 @@ int main(void)
 
 - PlatformIO с плагином `platform-atmelavr`
 - AVR-GCC (входит в состав PlatformIO)
-- Библиотека `zh_rf_config` (подключается через `lib_deps` в `platformio.ini`)
+- Библиотека `zh_nrf24_config` (подключается через `lib_deps` в `platformio.ini`)
 - Программатор USBasp (или совместимый)
 - Фьюзы: LFUSE=`0xE2`, HFUSE=`0xDF`, EFUSE=`0x07` (8 МГц, без делителя)
 
@@ -326,12 +326,12 @@ pio run -e ATmega328P -t upload
 
 ### Подключение в проекте
 
-Компонент является самодостаточной прошивкой — не подключается как библиотека. Для интеграции в другой проект скопируйте `src/main.c`, добавьте зависимость `zh_rf_config` и адаптируйте макросы конфигурации.
+Компонент является самодостаточной прошивкой — не подключается как библиотека. Для интеграции в другой проект скопируйте `src/main.c`, добавьте зависимость `zh_nrf24_config` и адаптируйте макросы конфигурации.
 
 ```ini
 ; platformio.ini
 lib_deps =
-    https://github.com/aZholtikov/zh_rf_config
+    https://github.com/aZholtikov/zh_nrf24_config
 ```
 
 ### Подключение заголовков в коде
@@ -347,5 +347,5 @@ lib_deps =
 #include "util/delay.h"
 #include "math.h"
 #include "stdbool.h"
-#include "zh_rf_config.h"
+#include "zh_nrf24_config.h"
 ```
