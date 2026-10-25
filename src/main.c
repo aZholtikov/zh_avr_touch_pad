@@ -516,7 +516,7 @@ static void zh_nrf24_read_payload(uint8_t *buf, uint8_t count)
 {
 	PORTB &= ~(1 << PB2);
 	zh_spi_transfer(NRF_CMD_R_RX_PAYLOAD);
-	while (count--)
+	while (count-- != 0)
 	{
 		*buf++ = zh_spi_transfer(0xFF);
 	}
