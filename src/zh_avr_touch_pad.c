@@ -95,23 +95,23 @@
  *
  * @return Stored device id, or DEVICE_ID_UNASSIGNED if none is stored
  */
-static uint8_t zh_load_device_id(void);
+static uint8_t _zh_load_device_id(void);
 
 /**
  * @brief Save the device identifier to EEPROM.
  *
  * @param id Device identifier to store
  */
-static void zh_save_device_id(uint8_t id);
+static void _zh_save_device_id(uint8_t id);
 
 /**
  * @brief Initialize INT1 external interrupt for the touch-pad wake-up signal.
  *
  * Configures PD3 as a rising-edge triggered external interrupt source and
- * enables the INT1 interrupt mask bit. The ISR sets the send_request flag
+ * enables the INT1 interrupt mask bit. The ISR sets the _send_request flag
  * to trigger a radio transmission from the main loop.
  */
-static void zh_pad_interrupt_init(void);
+static void _zh_pad_interrupt_init(void);
 
 /**
  * @brief Initialize the hardware SPI peripheral in master mode.
@@ -119,7 +119,7 @@ static void zh_pad_interrupt_init(void);
  * Configures MOSI, SCK and SS pins as outputs, drives SS high, and enables
  * SPI with Fosc/16 clock rate.
  */
-static void zh_spi_init(void);
+static void _zh_spi_init(void);
 
 /**
  * @brief Perform a single full-duplex SPI byte transfer.
@@ -128,7 +128,7 @@ static void zh_spi_init(void);
  *
  * @return Byte received from the slave during the transfer
  */
-static uint8_t zh_spi_transfer(uint8_t data);
+static uint8_t _zh_spi_transfer(uint8_t data);
 
 /**
  * @brief Initialize the nRF24L01+ transceiver for TX-only operation.
@@ -137,16 +137,16 @@ static uint8_t zh_spi_transfer(uint8_t data);
  * settings, channel, RF power and data rate, and loads the gateway address
  * into both TX and RX pipe 0 registers.
  */
-static void zh_nrf24_init(void);
+static void _zh_nrf24_init(void);
 
 /**
  * @brief Initialize INT0 external interrupt for the nRF24 IRQ signal.
  *
  * Configures PD2 as a falling-edge triggered external interrupt source and
- * enables the INT0 interrupt mask bit. The ISR sets the nrf_event flag used
+ * enables the INT0 interrupt mask bit. The ISR sets the _nrf_event flag used
  * by the pairing state machine.
  */
-static void zh_nrf24_interrupt_init(void);
+static void _zh_nrf24_interrupt_init(void);
 
 /**
  * @brief Transmit a payload buffer through the nRF24L01+ module.
@@ -158,7 +158,7 @@ static void zh_nrf24_interrupt_init(void);
  * @param buf Pointer to the payload data to transmit (must not be NULL)
  * @param size Number of bytes in the payload buffer (must be > 0)
  */
-static void zh_nrf24_send(uint8_t *buf, uint8_t size);
+static void _zh_nrf24_send(uint8_t *buf, uint8_t size);
 
 /**
  * @brief Start a transmission without blocking on completion.
@@ -169,7 +169,7 @@ static void zh_nrf24_send(uint8_t *buf, uint8_t size);
  * @param buf Pointer to the payload data to transmit (must not be NULL)
  * @param size Number of bytes in the payload buffer (must be > 0)
  */
-static void zh_nrf24_send_no_wait(uint8_t *buf, uint8_t size);
+static void _zh_nrf24_send_no_wait(uint8_t *buf, uint8_t size);
 
 /**
  * @brief Send a single-byte command to the nRF24L01+ and read the status.
@@ -178,7 +178,7 @@ static void zh_nrf24_send_no_wait(uint8_t *buf, uint8_t size);
  *
  * @return Status register value returned by the nRF24L01+
  */
-static uint8_t zh_nrf24_send_command(uint8_t cmd);
+static uint8_t _zh_nrf24_send_command(uint8_t cmd);
 
 /**
  * @brief Write a data buffer to the nRF24L01+ via SPI with a given command.
@@ -192,7 +192,7 @@ static uint8_t zh_nrf24_send_command(uint8_t cmd);
  *
  * @return Status register value returned by the nRF24L01+
  */
-static uint8_t zh_nrf24_write_buffer(uint8_t cmd, uint8_t *buf, uint8_t count);
+static uint8_t _zh_nrf24_write_buffer(uint8_t cmd, uint8_t *buf, uint8_t count);
 
 /**
  * @brief Write a single byte value to an nRF24L01+ register.
@@ -202,12 +202,12 @@ static uint8_t zh_nrf24_write_buffer(uint8_t cmd, uint8_t *buf, uint8_t count);
  *
  * @return Status register value returned by the nRF24L01+
  */
-static uint8_t zh_nrf24_write_register(uint8_t reg, uint8_t val);
+static uint8_t _zh_nrf24_write_register(uint8_t reg, uint8_t val);
 
 /**
  * @brief Write a multi-byte buffer into an nRF24L01+ register.
  *
- * Convenience wrapper around zh_nrf24_write_buffer that prepends the
+ * Convenience wrapper around _zh_nrf24_write_buffer that prepends the
  * W_REGISTER command to the register address.
  *
  * @param reg Register address to write to
@@ -216,7 +216,7 @@ static uint8_t zh_nrf24_write_register(uint8_t reg, uint8_t val);
  *
  * @return Status register value returned by the nRF24L01+
  */
-static uint8_t zh_nrf24_write_buff_register(uint8_t reg, uint8_t *buf, uint8_t count);
+static uint8_t _zh_nrf24_write_buff_register(uint8_t reg, uint8_t *buf, uint8_t count);
 
 /**
  * @brief Read the received payload from the nRF24L01+ into a buffer.
@@ -224,43 +224,43 @@ static uint8_t zh_nrf24_write_buff_register(uint8_t reg, uint8_t *buf, uint8_t c
  * @param buf Pointer to the destination buffer (must not be NULL)
  * @param count Number of bytes to read from the RX FIFO
  */
-static void zh_nrf24_read_payload(uint8_t *buf, uint8_t count);
+static void _zh_nrf24_read_payload(uint8_t *buf, uint8_t count);
 
 /**
  * @brief Read the width of the payload in the nRF24L01+ RX FIFO.
  *
  * @return Payload width in bytes
  */
-static uint8_t zh_nrf24_read_payload_width(void);
+static uint8_t _zh_nrf24_read_payload_width(void);
 
 /**
  * @brief Switch the nRF24L01+ to RX mode on pipe 0.
  */
-static void zh_nrf24_enter_rx(void);
+static void _zh_nrf24_enter_rx(void);
 
 /**
  * @brief Put the nRF24L01+ into power-down mode.
  */
-static void zh_nrf24_enter_power_down(void);
+static void _zh_nrf24_enter_power_down(void);
 
 /**
  * @brief Start the watchdog timer in interrupt mode with the given timeout.
  *
  * @param timeout_bits Watchdog timeout prescaler bits (WDP3:0)
  */
-static void zh_wdt_start(uint8_t timeout_bits);
+static void _zh_wdt_start(uint8_t timeout_bits);
 
 /**
  * @brief Stop the watchdog timer.
  */
-static void zh_wdt_stop(void);
+static void _zh_wdt_stop(void);
 
 /**
  * @brief Generate a pseudo-random token from MCU state and ADC noise.
  *
  * @return 16-bit random token (never zero)
  */
-static uint16_t zh_get_random_token(void);
+static uint16_t _zh_get_random_token(void);
 
 /**
  * @brief Run the non-blocking pairing procedure to obtain a device id.
@@ -271,7 +271,7 @@ static uint16_t zh_get_random_token(void);
  *
  * @return Device identifier assigned by the gateway
  */
-static uint8_t zh_do_pairing(void);
+static uint8_t _zh_do_pairing(void);
 
 /**
  * @brief Enter permanent power-down sleep until the next reset.
@@ -279,7 +279,7 @@ static uint8_t zh_do_pairing(void);
  * Disables all interrupts, the watchdog, the radio, the ADC, SPI and all
  * unused peripheral clocks, then loops in power-down sleep mode.
  */
-static void zh_enter_final_sleep(void);
+static void _zh_enter_final_sleep(void);
 
 /**
  * @brief Measure the battery voltage using the internal AVcc reference.
@@ -290,56 +290,56 @@ static void zh_enter_final_sleep(void);
  *
  * @return Battery voltage in volts, or 0.0 if the ADC reading is zero
  */
-static float zh_get_battery_voltage(void);
+static float _zh_get_battery_voltage(void);
 
-static volatile uint8_t send_request = false;
-static volatile uint8_t nrf_event = false;
+static volatile bool _send_request = false;
+static volatile bool _nrf_event = false;
 
-zh_nrf24_sensor_transmitted_data_t transmitted_data = {0};
+zh_nrf24_sensor_transmitted_data_t _transmitted_data = {0};
 
 int main(void)
 {
-	transmitted_data.type = ZH_NRF24_SENSOR_TOUCH_SWITCH;
+	_transmitted_data.type = ZH_NRF24_SENSOR_TOUCH_SWITCH;
 	MCUSR &= ~(1 << WDRF);
 	wdt_disable();
 	cli();
-	zh_pad_interrupt_init();
-	zh_spi_init();
-	zh_nrf24_init();
+	_zh_pad_interrupt_init();
+	_zh_spi_init();
+	_zh_nrf24_init();
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 	sei();
-	uint8_t device_id = zh_load_device_id();
+	uint8_t device_id = _zh_load_device_id();
 	if (device_id == DEVICE_ID_UNASSIGNED)
 	{
-		device_id = zh_do_pairing();
+		device_id = _zh_do_pairing();
 	}
-	transmitted_data.id = (int16_t)device_id;
+	_transmitted_data.id = (int16_t)device_id;
 	{
 		uint8_t probe[ZH_NRF24_MAX_PAYLOAD_SIZE];
-		if (zh_nrf24_sensor_build_payload(&transmitted_data, probe, sizeof(probe)) == 0)
+		if (zh_nrf24_sensor_build_payload(&_transmitted_data, probe, sizeof(probe)) == 0)
 		{
-			zh_enter_final_sleep();
+			_zh_enter_final_sleep();
 		}
 	}
 	for (;;)
 	{
-		if (send_request == true)
+		if (_send_request == true)
 		{
 			cli();
-			send_request = false;
+			_send_request = false;
 			sei();
-			transmitted_data.battery = (int16_t)lroundf(zh_get_battery_voltage() * 100.0);
+			_transmitted_data.battery = (int16_t)lroundf(_zh_get_battery_voltage() * 100.0);
 			uint8_t payload[ZH_NRF24_MAX_PAYLOAD_SIZE];
-			uint8_t size = zh_nrf24_sensor_build_payload(&transmitted_data, payload, sizeof(payload));
+			uint8_t size = zh_nrf24_sensor_build_payload(&_transmitted_data, payload, sizeof(payload));
 			if (size > 0)
 			{
-				zh_nrf24_send(payload, size);
+				_zh_nrf24_send(payload, size);
 			}
 		}
 		else
 		{
 			cli();
-			if (send_request == false)
+			if (_send_request == false)
 			{
 				sleep_enable();
 				sei();
@@ -354,19 +354,19 @@ int main(void)
 
 ISR(INT1_vect)
 {
-	send_request = true;
+	_send_request = true;
 }
 
 ISR(INT0_vect)
 {
-	nrf_event = true;
+	_nrf_event = true;
 }
 
 ISR(WDT_vect)
 {
 }
 
-static uint8_t zh_load_device_id(void)
+static uint8_t _zh_load_device_id(void)
 {
 	uint8_t id = eeprom_read_byte(EEPROM_DEVICE_ID_ADDR);
 	if (id == 0xFF || id == 0x00)
@@ -376,12 +376,12 @@ static uint8_t zh_load_device_id(void)
 	return id;
 }
 
-static void zh_save_device_id(uint8_t id)
+static void _zh_save_device_id(uint8_t id)
 {
 	eeprom_update_byte(EEPROM_DEVICE_ID_ADDR, id);
 }
 
-static void zh_pad_interrupt_init(void)
+static void _zh_pad_interrupt_init(void)
 {
 	DDRD &= ~(1 << PD3);
 	PORTD &= ~(1 << PD3);
@@ -391,14 +391,14 @@ static void zh_pad_interrupt_init(void)
 	EIMSK |= (1 << INT1);
 }
 
-static void zh_spi_init(void)
+static void _zh_spi_init(void)
 {
 	DDRB |= (1 << PB2) | (1 << PB3) | (1 << PB5);
 	PORTB |= (1 << PB2);
 	SPCR = (1 << SPE) | (1 << MSTR) | (1 << SPR0);
 }
 
-static uint8_t zh_spi_transfer(uint8_t data)
+static uint8_t _zh_spi_transfer(uint8_t data)
 {
 	SPDR = data;
 	while ((SPSR & (1 << SPIF)) == 0)
@@ -407,7 +407,7 @@ static uint8_t zh_spi_transfer(uint8_t data)
 	return SPDR;
 }
 
-static void zh_nrf24_init(void)
+static void _zh_nrf24_init(void)
 {
 	_delay_ms(100);
 	DDRB |= (1 << PB1);
@@ -416,23 +416,23 @@ static void zh_nrf24_init(void)
 	PORTD |= (1 << PD2);
 	uint64_t gateway_address = GATEWAY_ADDRESS;
 	uint8_t activation_key = 0x73;
-	zh_nrf24_write_register(NRF_REG_CONFIG, 0x00);
-	zh_nrf24_write_register(NRF_REG_EN_AA, 0x01);
-	zh_nrf24_write_register(NRF_REG_EN_RXADDR, 0x01);
-	zh_nrf24_write_register(NRF_REG_SETUP_AW, 0x01);
-	zh_nrf24_write_register(NRF_REG_SETUP_RETR, 0xFF);
-	zh_nrf24_write_register(NRF_REG_RF_CH, GATEWAY_CHANNEL);
-	zh_nrf24_write_register(NRF_REG_RF_SETUP, 0x26);
-	zh_nrf24_write_buff_register(NRF_REG_TX_ADDR, (uint8_t *)&gateway_address, 3);
-	zh_nrf24_write_buff_register(NRF_REG_RX_ADDR_P0, (uint8_t *)&gateway_address, 3);
-	zh_nrf24_write_register(NRF_REG_STATUS, NRF_STATUS_RX_DR | NRF_STATUS_TX_DS | NRF_STATUS_MAX_RT);
-	zh_nrf24_write_buffer(NRF_CMD_ACTIVATE, &activation_key, sizeof(activation_key));
-	zh_nrf24_write_register(NRF_REG_FEATURE, NRF_FEATURE_EN_DPL);
-	zh_nrf24_write_register(NRF_REG_DYNPD, NRF_DYNPD_DPL_P0);
-	zh_nrf24_write_register(NRF_REG_CONFIG, NRF_CONFIG_MASK_RX_DR | NRF_CONFIG_EN_CRC);
+	_zh_nrf24_write_register(NRF_REG_CONFIG, 0x00);
+	_zh_nrf24_write_register(NRF_REG_EN_AA, 0x01);
+	_zh_nrf24_write_register(NRF_REG_EN_RXADDR, 0x01);
+	_zh_nrf24_write_register(NRF_REG_SETUP_AW, 0x01);
+	_zh_nrf24_write_register(NRF_REG_SETUP_RETR, 0xFF);
+	_zh_nrf24_write_register(NRF_REG_RF_CH, GATEWAY_CHANNEL);
+	_zh_nrf24_write_register(NRF_REG_RF_SETUP, 0x26);
+	_zh_nrf24_write_buff_register(NRF_REG_TX_ADDR, (uint8_t *)&gateway_address, 3);
+	_zh_nrf24_write_buff_register(NRF_REG_RX_ADDR_P0, (uint8_t *)&gateway_address, 3);
+	_zh_nrf24_write_register(NRF_REG_STATUS, NRF_STATUS_RX_DR | NRF_STATUS_TX_DS | NRF_STATUS_MAX_RT);
+	_zh_nrf24_write_buffer(NRF_CMD_ACTIVATE, &activation_key, sizeof(activation_key));
+	_zh_nrf24_write_register(NRF_REG_FEATURE, NRF_FEATURE_EN_DPL);
+	_zh_nrf24_write_register(NRF_REG_DYNPD, NRF_DYNPD_DPL_P0);
+	_zh_nrf24_write_register(NRF_REG_CONFIG, NRF_CONFIG_MASK_RX_DR | NRF_CONFIG_EN_CRC);
 }
 
-static void zh_nrf24_interrupt_init(void)
+static void _zh_nrf24_interrupt_init(void)
 {
 	DDRD &= ~(1 << PD2);
 	PORTD |= (1 << PD2);
@@ -442,12 +442,12 @@ static void zh_nrf24_interrupt_init(void)
 	EIMSK |= (1 << INT0);
 }
 
-static void zh_nrf24_send(uint8_t *buf, uint8_t size)
+static void _zh_nrf24_send(uint8_t *buf, uint8_t size)
 {
-	zh_nrf24_write_register(NRF_REG_CONFIG, NRF_CONFIG_MASK_RX_DR | NRF_CONFIG_EN_CRC | NRF_CONFIG_PWR_UP);
+	_zh_nrf24_write_register(NRF_REG_CONFIG, NRF_CONFIG_MASK_RX_DR | NRF_CONFIG_EN_CRC | NRF_CONFIG_PWR_UP);
 	_delay_ms(5);
-	zh_nrf24_send_command(NRF_CMD_FLUSH_TX);
-	zh_nrf24_write_buffer(NRF_CMD_W_TX_PAYLOAD, buf, size);
+	_zh_nrf24_send_command(NRF_CMD_FLUSH_TX);
+	_zh_nrf24_write_buffer(NRF_CMD_W_TX_PAYLOAD, buf, size);
 	PORTB |= (1 << PB1);
 	uint8_t count = 0;
 	while ((PIND & (1 << PD2)) != 0)
@@ -459,97 +459,97 @@ static void zh_nrf24_send(uint8_t *buf, uint8_t size)
 		_delay_ms(1);
 	}
 	PORTB &= ~(1 << PB1);
-	uint8_t status = zh_nrf24_send_command(NRF_CMD_NOP);
-	zh_nrf24_write_register(NRF_REG_STATUS, status);
-	zh_nrf24_send_command(NRF_CMD_FLUSH_TX);
-	zh_nrf24_write_register(NRF_REG_CONFIG, NRF_CONFIG_MASK_RX_DR | NRF_CONFIG_EN_CRC);
+	uint8_t status = _zh_nrf24_send_command(NRF_CMD_NOP);
+	_zh_nrf24_write_register(NRF_REG_STATUS, status);
+	_zh_nrf24_send_command(NRF_CMD_FLUSH_TX);
+	_zh_nrf24_write_register(NRF_REG_CONFIG, NRF_CONFIG_MASK_RX_DR | NRF_CONFIG_EN_CRC);
 }
 
-static void zh_nrf24_send_no_wait(uint8_t *buf, uint8_t size)
+static void _zh_nrf24_send_no_wait(uint8_t *buf, uint8_t size)
 {
 	PORTB &= ~(1 << PB1);
-	zh_nrf24_write_register(NRF_REG_CONFIG, NRF_CONFIG_MASK_RX_DR | NRF_CONFIG_EN_CRC | NRF_CONFIG_PWR_UP);
+	_zh_nrf24_write_register(NRF_REG_CONFIG, NRF_CONFIG_MASK_RX_DR | NRF_CONFIG_EN_CRC | NRF_CONFIG_PWR_UP);
 	_delay_ms(2);
-	zh_nrf24_send_command(NRF_CMD_FLUSH_TX);
-	zh_nrf24_write_register(NRF_REG_STATUS, NRF_STATUS_TX_DS | NRF_STATUS_MAX_RT | NRF_STATUS_RX_DR);
-	zh_nrf24_write_buffer(NRF_CMD_W_TX_PAYLOAD, buf, size);
+	_zh_nrf24_send_command(NRF_CMD_FLUSH_TX);
+	_zh_nrf24_write_register(NRF_REG_STATUS, NRF_STATUS_TX_DS | NRF_STATUS_MAX_RT | NRF_STATUS_RX_DR);
+	_zh_nrf24_write_buffer(NRF_CMD_W_TX_PAYLOAD, buf, size);
 	PORTB |= (1 << PB1);
 	_delay_us(15);
 	PORTB &= ~(1 << PB1);
 }
 
-static uint8_t zh_nrf24_send_command(uint8_t cmd)
+static uint8_t _zh_nrf24_send_command(uint8_t cmd)
 {
 	PORTB &= ~(1 << PB2);
-	uint8_t status = zh_spi_transfer(cmd);
+	uint8_t status = _zh_spi_transfer(cmd);
 	PORTB |= (1 << PB2);
 	return status;
 }
 
-static uint8_t zh_nrf24_write_buffer(uint8_t cmd, uint8_t *buf, uint8_t count)
+static uint8_t _zh_nrf24_write_buffer(uint8_t cmd, uint8_t *buf, uint8_t count)
 {
 	PORTB &= ~(1 << PB2);
-	uint8_t status = zh_spi_transfer(cmd);
+	uint8_t status = _zh_spi_transfer(cmd);
 	while (count-- != 0)
 	{
-		zh_spi_transfer(*(buf++));
+		_zh_spi_transfer(*(buf++));
 	}
 	PORTB |= (1 << PB2);
 	return status;
 }
 
-static uint8_t zh_nrf24_write_register(uint8_t reg, uint8_t val)
+static uint8_t _zh_nrf24_write_register(uint8_t reg, uint8_t val)
 {
 	PORTB &= ~(1 << PB2);
-	uint8_t status = zh_spi_transfer(reg | NRF_CMD_W_REGISTER);
-	zh_spi_transfer(val);
+	uint8_t status = _zh_spi_transfer(reg | NRF_CMD_W_REGISTER);
+	_zh_spi_transfer(val);
 	PORTB |= (1 << PB2);
 	return status;
 }
 
-static uint8_t zh_nrf24_write_buff_register(uint8_t reg, uint8_t *buf, uint8_t count)
+static uint8_t _zh_nrf24_write_buff_register(uint8_t reg, uint8_t *buf, uint8_t count)
 {
-	return zh_nrf24_write_buffer((reg | NRF_CMD_W_REGISTER), buf, count);
+	return _zh_nrf24_write_buffer((reg | NRF_CMD_W_REGISTER), buf, count);
 }
 
-static void zh_nrf24_read_payload(uint8_t *buf, uint8_t count)
+static void _zh_nrf24_read_payload(uint8_t *buf, uint8_t count)
 {
 	PORTB &= ~(1 << PB2);
-	zh_spi_transfer(NRF_CMD_R_RX_PAYLOAD);
+	_zh_spi_transfer(NRF_CMD_R_RX_PAYLOAD);
 	while (count-- != 0)
 	{
-		*buf++ = zh_spi_transfer(0xFF);
+		*buf++ = _zh_spi_transfer(0xFF);
 	}
 	PORTB |= (1 << PB2);
 }
 
-static uint8_t zh_nrf24_read_payload_width(void)
+static uint8_t _zh_nrf24_read_payload_width(void)
 {
 	PORTB &= ~(1 << PB2);
-	zh_spi_transfer(NRF_CMD_R_RX_PL_WID);
-	uint8_t width = zh_spi_transfer(0xFF);
+	_zh_spi_transfer(NRF_CMD_R_RX_PL_WID);
+	uint8_t width = _zh_spi_transfer(0xFF);
 	PORTB |= (1 << PB2);
 	return width;
 }
 
-static void zh_nrf24_enter_rx(void)
+static void _zh_nrf24_enter_rx(void)
 {
 	PORTB &= ~(1 << PB1);
-	zh_nrf24_write_register(NRF_REG_STATUS, NRF_STATUS_TX_DS | NRF_STATUS_MAX_RT | NRF_STATUS_RX_DR);
-	zh_nrf24_send_command(NRF_CMD_FLUSH_RX);
-	zh_nrf24_write_register(NRF_REG_CONFIG, NRF_CONFIG_EN_CRC | NRF_CONFIG_PWR_UP | NRF_CONFIG_PRIM_RX);
+	_zh_nrf24_write_register(NRF_REG_STATUS, NRF_STATUS_TX_DS | NRF_STATUS_MAX_RT | NRF_STATUS_RX_DR);
+	_zh_nrf24_send_command(NRF_CMD_FLUSH_RX);
+	_zh_nrf24_write_register(NRF_REG_CONFIG, NRF_CONFIG_EN_CRC | NRF_CONFIG_PWR_UP | NRF_CONFIG_PRIM_RX);
 	_delay_ms(2);
 	PORTB |= (1 << PB1);
 	_delay_us(130);
 }
 
-static void zh_nrf24_enter_power_down(void)
+static void _zh_nrf24_enter_power_down(void)
 {
 	PORTB &= ~(1 << PB1);
-	zh_nrf24_write_register(NRF_REG_CONFIG, NRF_CONFIG_EN_CRC);
+	_zh_nrf24_write_register(NRF_REG_CONFIG, NRF_CONFIG_EN_CRC);
 }
 
-static void zh_wdt_start(uint8_t timeout_bits)
+static void _zh_wdt_start(uint8_t timeout_bits)
 {
 	uint8_t wdp = (timeout_bits & 0x07) | ((timeout_bits & 0x08) ? (1 << WDP3) : 0);
 	cli();
@@ -559,7 +559,7 @@ static void zh_wdt_start(uint8_t timeout_bits)
 	sei();
 }
 
-static void zh_wdt_stop(void)
+static void _zh_wdt_stop(void)
 {
 	cli();
 	wdt_reset();
@@ -568,7 +568,7 @@ static void zh_wdt_stop(void)
 	sei();
 }
 
-static uint16_t zh_get_random_token(void)
+static uint16_t _zh_get_random_token(void)
 {
 	uint16_t token = MCUSR;
 	MCUSR = 0;
@@ -591,16 +591,16 @@ static uint16_t zh_get_random_token(void)
 	return token;
 }
 
-static uint8_t zh_do_pairing(void)
+static uint8_t _zh_do_pairing(void)
 {
-	uint16_t token = zh_get_random_token();
+	uint16_t token = _zh_get_random_token();
 	zh_nrf24_sensor_pairing_data_t pairing_request;
-	pairing_request.type = (uint8_t)transmitted_data.type;
+	pairing_request.type = (uint8_t)_transmitted_data.type;
 	pairing_request.magic = ZH_NRF24_PAIRING_REQ_MAGIC;
 	pairing_request.token_hi = (uint8_t)(token >> 8);
 	pairing_request.token_lo = (uint8_t)(token & 0xFF);
 	pairing_request.id = 0;
-	zh_nrf24_interrupt_init();
+	_zh_nrf24_interrupt_init();
 	zh_nrf24_sensor_pairing_state_t state = ZH_NRF24_PAIR_SEND;
 	uint8_t attempts = 0;
 	for (;;)
@@ -608,34 +608,34 @@ static uint8_t zh_do_pairing(void)
 		switch (state)
 		{
 		case ZH_NRF24_PAIR_SEND:
-			nrf_event = false;
-			zh_nrf24_send_no_wait((uint8_t *)&pairing_request, ZH_NRF24_PAIRING_PACKET_SIZE);
+			_nrf_event = false;
+			_zh_nrf24_send_no_wait((uint8_t *)&pairing_request, ZH_NRF24_PAIRING_PACKET_SIZE);
 			state = ZH_NRF24_PAIR_TX_WAIT;
 			break;
 		case ZH_NRF24_PAIR_TX_WAIT:
 			if ((PIND & (1 << PD2)) == 0)
 			{
-				nrf_event = true;
+				_nrf_event = true;
 			}
 			else
 			{
-				nrf_event = false;
-				zh_wdt_start(WDT_T_250MS);
+				_nrf_event = false;
+				_zh_wdt_start(WDT_T_250MS);
 				sleep_enable();
 				sei();
 				sleep_cpu();
 				sleep_disable();
-				zh_wdt_stop();
+				_zh_wdt_stop();
 				sei();
 			}
-			if (nrf_event == true)
+			if (_nrf_event == true)
 			{
-				nrf_event = false;
-				uint8_t status = zh_nrf24_send_command(NRF_CMD_NOP);
-				zh_nrf24_write_register(NRF_REG_STATUS, NRF_STATUS_TX_DS | NRF_STATUS_MAX_RT | NRF_STATUS_RX_DR);
+				_nrf_event = false;
+				uint8_t status = _zh_nrf24_send_command(NRF_CMD_NOP);
+				_zh_nrf24_write_register(NRF_REG_STATUS, NRF_STATUS_TX_DS | NRF_STATUS_MAX_RT | NRF_STATUS_RX_DR);
 				if ((status & NRF_STATUS_TX_DS) != 0)
 				{
-					zh_nrf24_enter_rx();
+					_zh_nrf24_enter_rx();
 					state = ZH_NRF24_PAIR_RX_WAIT;
 				}
 				else
@@ -651,53 +651,53 @@ static uint8_t zh_do_pairing(void)
 		case ZH_NRF24_PAIR_RX_WAIT:
 			if ((PIND & (1 << PD2)) == 0)
 			{
-				nrf_event = true;
+				_nrf_event = true;
 			}
 			else
 			{
-				nrf_event = false;
-				zh_wdt_start(WDT_T_250MS);
+				_nrf_event = false;
+				_zh_wdt_start(WDT_T_250MS);
 				sleep_enable();
 				sei();
 				sleep_cpu();
 				sleep_disable();
-				zh_wdt_stop();
+				_zh_wdt_stop();
 				sei();
 			}
-			if (nrf_event == true)
+			if (_nrf_event == true)
 			{
-				nrf_event = false;
-				uint8_t status = zh_nrf24_send_command(NRF_CMD_NOP);
+				_nrf_event = false;
+				uint8_t status = _zh_nrf24_send_command(NRF_CMD_NOP);
 				if ((status & NRF_STATUS_RX_DR) != 0)
 				{
-					uint8_t width = zh_nrf24_read_payload_width();
+					uint8_t width = _zh_nrf24_read_payload_width();
 					if (width > ZH_NRF24_MAX_PAYLOAD_SIZE)
 					{
-						zh_nrf24_send_command(NRF_CMD_FLUSH_RX);
-						zh_nrf24_write_register(NRF_REG_STATUS, NRF_STATUS_RX_DR);
+						_zh_nrf24_send_command(NRF_CMD_FLUSH_RX);
+						_zh_nrf24_write_register(NRF_REG_STATUS, NRF_STATUS_RX_DR);
 						state = ZH_NRF24_PAIR_BACKOFF;
 						break;
 					}
 					if (width != ZH_NRF24_PAIRING_PACKET_SIZE)
 					{
 						uint8_t dummy[ZH_NRF24_MAX_PAYLOAD_SIZE];
-						zh_nrf24_read_payload(dummy, width);
-						zh_nrf24_write_register(NRF_REG_STATUS, NRF_STATUS_RX_DR);
-						zh_nrf24_send_command(NRF_CMD_FLUSH_RX);
+						_zh_nrf24_read_payload(dummy, width);
+						_zh_nrf24_write_register(NRF_REG_STATUS, NRF_STATUS_RX_DR);
+						_zh_nrf24_send_command(NRF_CMD_FLUSH_RX);
 						state = ZH_NRF24_PAIR_BACKOFF;
 						break;
 					}
 					zh_nrf24_sensor_pairing_data_t pairing_response;
-					zh_nrf24_read_payload((uint8_t *)&pairing_response, width);
-					zh_nrf24_write_register(NRF_REG_STATUS, NRF_STATUS_RX_DR | NRF_STATUS_TX_DS | NRF_STATUS_MAX_RT);
-					zh_nrf24_send_command(NRF_CMD_FLUSH_RX);
+					_zh_nrf24_read_payload((uint8_t *)&pairing_response, width);
+					_zh_nrf24_write_register(NRF_REG_STATUS, NRF_STATUS_RX_DR | NRF_STATUS_TX_DS | NRF_STATUS_MAX_RT);
+					_zh_nrf24_send_command(NRF_CMD_FLUSH_RX);
 					if (pairing_response.magic == ZH_NRF24_PAIRING_ACK_MAGIC && pairing_response.type == pairing_request.type &&
 						pairing_response.token_hi == pairing_request.token_hi && pairing_response.token_lo == pairing_request.token_lo &&
 						pairing_response.id != 0 && pairing_response.id != DEVICE_ID_UNASSIGNED)
 					{
-						zh_nrf24_enter_power_down();
+						_zh_nrf24_enter_power_down();
 						EIMSK &= ~(1 << INT0);
-						zh_save_device_id(pairing_response.id);
+						_zh_save_device_id(pairing_response.id);
 						return pairing_response.id;
 					}
 				}
@@ -709,18 +709,18 @@ static uint8_t zh_do_pairing(void)
 			}
 			break;
 		case ZH_NRF24_PAIR_BACKOFF:
-			zh_nrf24_enter_power_down();
-			nrf_event = false;
-			zh_wdt_start(WDT_T_4S);
+			_zh_nrf24_enter_power_down();
+			_nrf_event = false;
+			_zh_wdt_start(WDT_T_4S);
 			sleep_enable();
 			sei();
 			sleep_cpu();
 			sleep_disable();
-			zh_wdt_stop();
+			_zh_wdt_stop();
 			sei();
 			if (++attempts >= PAIRING_TIMEOUT_ATTEMPTS)
 			{
-				zh_enter_final_sleep();
+				_zh_enter_final_sleep();
 			}
 			state = ZH_NRF24_PAIR_SEND;
 			break;
@@ -728,14 +728,14 @@ static uint8_t zh_do_pairing(void)
 	}
 }
 
-static void zh_enter_final_sleep(void)
+static void _zh_enter_final_sleep(void)
 {
 	cli();
 	EIMSK = 0;
 	EIFR = 0xFF;
-	zh_wdt_stop();
+	_zh_wdt_stop();
 	PORTB &= ~(1 << PB1);
-	zh_nrf24_write_register(NRF_REG_CONFIG, 0x00);
+	_zh_nrf24_write_register(NRF_REG_CONFIG, 0x00);
 	ADCSRA = 0;
 	SPCR = 0;
 	PRR = (1 << PRTWI) | (1 << PRTIM2) | (1 << PRTIM1) | (1 << PRTIM0) | (1 << PRSPI) | (1 << PRUSART0);
@@ -747,7 +747,7 @@ static void zh_enter_final_sleep(void)
 	}
 }
 
-static float zh_get_battery_voltage(void)
+static float _zh_get_battery_voltage(void)
 {
 	ADMUX = (1 << REFS0) | (1 << MUX3) | (1 << MUX2) | (1 << MUX1);
 	ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
