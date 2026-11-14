@@ -7,7 +7,7 @@
  * This module implements a low-power touch pad sensor that communicates via
  * NRF24L01+ radio module. The device wakes up on touch pad interrupt, reads
  * battery voltage, transmits sensor data, and returns to power-down sleep
- * mode. It supports ATmega168PB and ATmega328PB microcontrollers.
+ * mode. It supports ATMega168/168P/168PB/328/328P/328PB microcontrollers.
  *
  * Key features:
  * - Touch pad interrupt-driven wake-up with PCINT2
@@ -25,14 +25,13 @@
 #include "avr/interrupt.h"
 #include "avr/wdt.h"
 #include "util/delay.h"
-#include "math.h"
 #include "stdbool.h"
 #include "zh_rf_config.h"
 
 #define GATEWAY_CHANNEL 120
 #define GATEWAY_ADDRESS 0xDDEEFF
 #define DEVICE_ID 6
-#define BATTERY_VOLTAGE_CALIBRATION 1.0f
+#define BATTERY_VOLTAGE_CALIBRATION 1000UL
 
 #define NRF_GPIO_CE PB1
 #define NRF_GPIO_CSN PB2
@@ -249,12 +248,12 @@ static void _zh_wdt_timeout_stop(void);
  * Enables ADC, sets REFS0 for internal 1.1V bandgap reference and selects
  * the 1.1V bandgap input (MUX3|MUX2|MUX1). Waits for settling, performs
  * two dummy conversions, then reads the final result. Disables ADC and
- * powers down the ADC module afterward. Returns voltage in volts, or 0.0f
- * if the ADC reading is zero (indicating a disconnected battery).
+ * powers down the ADC module afterward. Returns voltage in centivolts
+ * (hundredths of a volt), or 0 on zero ADC reading.
  *
- * @return Battery voltage in volts, or 0.0f on zero ADC reading
+ * @return Battery voltage in centivolts (×100), or 0 on zero ADC reading
  */
-static float _zh_get_battery_voltage(void);
+static int16_t _zh_get_battery_voltage(void);
 
 static volatile bool _send_request = false;
 static volatile bool _nrf_irq_fired = false;
@@ -281,7 +280,7 @@ int main(void)
 			cli();
 			_send_request = false;
 			sei();
-			_transmitted_data.battery_voltage = (int16_t)lroundf(_zh_get_battery_voltage() * 100.0f);
+			_transmitted_data.battery_voltage = _zh_get_battery_voltage();
 			SPCR |= (1 << SPE);
 			_zh_nrf24_send((uint8_t *)&_transmitted_data, sizeof(_transmitted_data));
 			SPCR &= ~(1 << SPE);
@@ -520,18 +519,18 @@ static void _zh_wdt_timeout_stop(void)
 	SREG = sreg;
 }
 
-static float _zh_get_battery_voltage(void)
+static int16_t _zh_get_battery_voltage(void)
 {
 	PRR &= ~(1 << PRADC);
 	ADMUX = (1 << REFS0) | (1 << MUX3) | (1 << MUX2) | (1 << MUX1);
 	ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
 	_delay_ms(10);
 	ADCSRA |= (1 << ADSC);
-	while (ADCSRA & (1 << ADSC))
+	while ((ADCSRA & (1 << ADSC)) != 0)
 	{
 	}
 	ADCSRA |= (1 << ADSC);
-	while (ADCSRA & (1 << ADSC))
+	while ((ADCSRA & (1 << ADSC)) != 0)
 	{
 	}
 	uint16_t adc = ADC;
@@ -539,7 +538,9 @@ static float _zh_get_battery_voltage(void)
 	PRR |= (1 << PRADC);
 	if (adc == 0)
 	{
-		return 0.0f;
+		return 0;
 	}
-	return ((1024.0f * 1.1f) / (float)adc) * BATTERY_VOLTAGE_CALIBRATION;
+	uint32_t num = 112640UL * BATTERY_VOLTAGE_CALIBRATION;
+	uint32_t den = (uint32_t)adc * 1000UL;
+	return (int16_t)((num + den / 2UL) / den);
 }
