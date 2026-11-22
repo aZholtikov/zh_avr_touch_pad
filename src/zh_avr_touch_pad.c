@@ -11,7 +11,7 @@
  *
  * Key features:
  * - Touch pad interrupt-driven wake-up with PCINT2
- * - NRF24L01+ radio communication with blocking send-and-wait
+ * - NRF24L01+ radio communication with interrupt-driven TX completion
  * - Battery voltage measurement via internal ADC
  * - Watchdog timer for transmit timeout protection
  * - Ultra-low power sleep mode between events
@@ -118,9 +118,9 @@ static void _zh_gpio_default_init(void);
 /**
  * @brief Configure touch pad pin as interrupt source via PCINT2.
  *
- * Sets PD3 (PAD_GPIO_INT) as input with no pull-up, clears pending
- * interrupt flags, enables PCINT19 in the PCMSK2 mask, and enables
- * the PCIE2 interrupt group.
+ * Sets PD3 (PAD_GPIO_INT) as input with pull-up disabled, clears pending
+ * interrupt flags in PCIFR, enables PCINT19 in the PCMSK2 mask, and
+ * enables the PCIE2 interrupt group in PCICR.
  */
 static void _zh_pad_interrupt_init(void);
 
@@ -152,18 +152,23 @@ static uint8_t _zh_spi_transfer(uint8_t data);
  * Waits 100ms for hardware stabilization, configures CE as output and IRQ
  * as input with pull-up, sets INT0 to trigger on falling edge. Writes TX
  * and RX addresses, sets channel to GATEWAY_CHANNEL, enables auto-ack on
- * pipe 0, configures CRC and retransmission settings.
+ * pipe 0, configures CRC, retransmission (0xFF), and RF setup (0x26)
+ * settings. Disables RX_DR in CONFIG before returning.
  */
 static void _zh_nrf24_init(void);
 
 /**
  * @brief Send a payload via NRF24L01+ and wait for TX completion.
  *
- * Configures PWR_UP mode, flushes TX FIFO, writes the payload, and waits
- * for either TX_DS or MAX_RT interrupt via INT0. Uses watchdog timer as
- * a timeout mechanism. Sleeps in IDLE mode while waiting for the IRQ.
- * On completion, disables CE, stops watchdog, and returns to PWR_DOWN mode.
- * SPI faults during the send sequence abort the transmission.
+ * Powers up the module, flushes TX FIFO, writes the payload, and clears
+ * status flags. If no SPI fault occurred during setup, enables INT0, starts
+ * the watchdog timer, sets CE high, and sleeps in IDLE mode while waiting
+ * for either TX_DS or MAX_RT interrupt. Checks for a already-fired IRQ
+ * before entering the sleep loop to avoid races.
+ * On completion, disables CE and INT0, stops watchdog, restores PWR_DOWN
+ * sleep mode, clears status flags, flushes TX FIFO, and powers down.
+ * SPI faults during the send sequence abort the transmission and skip
+ * the IRQ wait, proceeding directly to cleanup.
  *
  * @param buf Pointer to the payload data to send
  * @param size Number of bytes in the payload
@@ -229,7 +234,7 @@ static uint8_t _zh_nrf24_send_command(uint8_t cmd);
  * @brief Start the watchdog timer as a transmit timeout mechanism.
  *
  * Clears the WDRF flag, configures WDTCSR for interrupt-only mode (WDIE)
- * with a ~85ms timeout (WDP1|WDP0 = 256ms prescaler on 128kHz clock).
+ * with a ~16ms timeout (WDP1|WDP0 = 128 prescaler on 128kHz internal clock).
  * Preserves and restores SREG for atomicity.
  */
 static void _zh_wdt_timeout_start(void);
@@ -237,8 +242,8 @@ static void _zh_wdt_timeout_start(void);
 /**
  * @brief Stop the watchdog timer.
  *
- * Clears the WDRF flag and disables WDTCSR by writing zero.
- * Preserves and restores SREG for atomicity.
+ * Resets the watchdog, clears the WDRF flag, and disables WDTCSR by writing
+ * zero with proper WDCE/WDE sequence. Preserves and restores SREG for atomicity.
  */
 static void _zh_wdt_timeout_stop(void);
 
@@ -414,7 +419,7 @@ static void _zh_nrf24_send(uint8_t *buf, uint8_t size)
 	if (tx_fault == false)
 	{
 		_zh_nrf24_write_register(NRF_REG_STATUS, NRF_STATUS_RX_DR | NRF_STATUS_TX_DS | NRF_STATUS_MAX_RT);
-		if (_spi_fault)
+		if (_spi_fault == true)
 		{
 			tx_fault = true;
 		}
